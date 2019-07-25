@@ -1,0 +1,226 @@
+
+<!DOCTYPE html>
+<html lang class="loading">
+<head><meta name="generator" content="Hexo 3.9.0">
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <meta name="viewport" content="width=device-width, minimum-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>iOS、 Android与H5的交互方案 - 随记</title>
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="google" content="notranslate">
+    <meta name="keywords" content="yangfabing,"> 
+    <meta name="description" content="iOS、 Android与H5的交互方案native端与h5端交互通过js的方式，只要知道对端的方法名就可以直接调用对端的方法。
+
+
+在安卓4.4以下，java调用js方法不能获取到js方法返回值
+,"> 
+    <meta name="author" content="yangfb"> 
+    <link rel="alternative" href="atom.xml" title="随记" type="application/atom+xml"> 
+    <link rel="icon" href="/img/favicon.png"> 
+    <link rel="stylesheet" href="//cdn.jsdelivr.net/npm/gitalk@1/dist/gitalk.css">
+    <link rel="stylesheet" href="/css/diaspora.css">
+    <script async src="//pagead2.googlesyndication.com/pagead/js/adsbygoogle.js"></script>
+    <script>
+         (adsbygoogle = window.adsbygoogle || []).push({
+              google_ad_client: "ca-pub-8691406134231910",
+              enable_page_level_ads: true
+         });
+    </script>
+    <script async custom-element="amp-auto-ads" src="https://cdn.ampproject.org/v0/amp-auto-ads-0.1.js">
+    </script>
+</head>
+</html>
+<body class="loading">
+    <span id="config-title" style="display:none">随记</span>
+    <div id="loader"></div>
+    <div id="single">
+    <div id="top" style="display: block;">
+    <div class="bar" style="width: 0;"></div>
+    <a class="icon-home image-icon" href="javascript:;" data-url="http://blog.yangfb.com"></a>
+    <div title="播放/暂停" class="icon-play"></div>
+    <h3 class="subtitle">iOS、 Android与H5的交互方案</h3>
+    <div class="social">
+        <!--<div class="like-icon">-->
+            <!--<a href="javascript:;" class="likeThis active"><span class="icon-like"></span><span class="count">76</span></a>-->
+        <!--</div>-->
+        <div>
+            <div class="share">
+                <a title="获取二维码" class="icon-scan" href="javascript:;"></a>
+            </div>
+            <div id="qr"></div>
+        </div>
+    </div>
+    <div class="scrollbar"></div>
+</div>
+
+    <div class="section">
+        <div class="article">
+    <div class='main'>
+        <h1 class="title">iOS、 Android与H5的交互方案</h1>
+        <div class="stuff">
+            <span>七月 24, 2019</span>
+            
+
+        </div>
+        <div class="content markdown">
+            <h1 id="iOS、-Android与H5的交互方案"><a href="#iOS、-Android与H5的交互方案" class="headerlink" title="iOS、 Android与H5的交互方案"></a>iOS、 Android与H5的交互方案</h1><p>native端与h5端交互通过js的方式，只要知道对端的方法名就可以直接调用对端的方法。</p>
+<blockquote>
+<ul>
+<li>在安卓4.4以下，java调用js方法不能获取到js方法返回值</li>
+<li>安卓平台js和原生方法交互时参数必须是基本类型和String</li>
+<li>安卓平台js调用原生方法时，原生端必须声明别名，js端以“对象别名.本地方法”方式调用，比如android.nativeFunc()</li>
+</ul>
+</blockquote>
+<h2 id="场景"><a href="#场景" class="headerlink" title="场景"></a>场景</h2><p>现在有一个H5活动页面，上面有一个登陆按钮，要求点击登陆按钮以后，唤出App内部的登录界面，当登录成功以后将用户的手机号返回给H5页面，显示出来。<br>这个场景应该算是比较完整的一次H5中的JavaScript与App原生代码进行交互了。</p>
+<p>当H5页面上的JavaScript代码要调用原生的页面或者组件的时候，调用最好是双向的，一来一回，这样比较容易满足一些比较复杂的业务场景，就像上面的场景一样，有调用，有回调告知H5调用的结果。前端开发写的JavaScript代码基本上都是异步风格的。</p>
+<p>原生端调用js端的方法时，调用也最好是双向的，有调用，有回调告知原生端调用的结果。</p>
+<p>这种方式可以采用闭包作为方法的参数来实现，iOS端有block，js端有匿名函数，安卓端也可以实现闭包的方式。</p>
+<h2 id="方案"><a href="#方案" class="headerlink" title="方案"></a>方案</h2><p>Android与iOS都支持在打开H5页面的时候，向H5页面的window对象上注入一个JavaScript可以访问到的对象。</p>
+<blockquote>
+<p>native端别名约定为<strong>hxWebBridge</strong>,供js调用原生方法时用</p>
+</blockquote>
+<p>Android端使用的是</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">webView.addJavascriptInterface(myJavaScriptInterface, “hxWebBridge”);</span><br></pre></td></tr></table></figure>
+
+<p>iOS端使用的是</p>
+<figure class="highlight objc"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">_jsContext = [_webView valueForKeyPath:<span class="string">@"documentView.webView.mainFrame.javaScriptContext"</span>];</span><br><span class="line">_jsContext[<span class="string">@"hxWebBridge"</span>] = bridge;</span><br></pre></td></tr></table></figure>
+
+<p>这里面Android的myJavaScriptInterface与iOS端的bridge都是作为与JavaScript进行通信的桥梁。</p>
+<p>为了完成双向通信，我们就需要在JavaScript端设置一个bridge，原生再注入一个bridge，这两个bridge按照一定的数据约定来进行双向通信和分发逻辑。</p>
+<h3 id="原生端注入方法供js端调用"><a href="#原生端注入方法供js端调用" class="headerlink" title="原生端注入方法供js端调用"></a>原生端注入方法供js端调用</h3><p>以iOS端为例，iOS端桥梁提供2个方法供js端调用</p>
+<figure class="highlight objc"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">@protocol</span> <span class="title">HXBridgeExport</span> &lt;<span class="title">JSExport</span>&gt;</span></span><br><span class="line"></span><br><span class="line"><span class="comment">//原生端用来handler js端调用的方法</span></span><br><span class="line">JSExportAs(handlerJSMessage, - (<span class="keyword">void</span>)handlerJSMessage:(JSValue *)requestObject callBack:(JSValue *)callBack);</span><br><span class="line"></span><br><span class="line"><span class="comment">//原生端用来接收js端方法执行后的返回数据</span></span><br><span class="line">- (<span class="keyword">void</span>)jsResponseCallback:(JSValue *)response;</span><br><span class="line"></span><br><span class="line"><span class="keyword">@end</span></span><br></pre></td></tr></table></figure>
+
+<p><strong>handlerJSMessage</strong>方法第一个参数requestObject是js端传给原生端的JavaScript对象,这个对象是字典结构，结构约定如下:</p>
+<figure class="highlight"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">&#123;</span><br><span class="line">    'Method':'Login',//Method是APP内部对外提供的API</span><br><span class="line">    'Data':&#123;&#125;//Data是该API需要的入参</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p><strong>handlerJSMessage</strong>方法第二个参数是一个callBack函数，iOS端该类型的JSValue可以调用callWithArguments:方法来invoke这个回调函数。回调函数结构约定如下:</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">function</span>(<span class="params">err, result</span>)</span></span><br><span class="line"><span class="function">//第一个参数是<span class="title">err</span>,第二个参数是结果</span></span><br><span class="line"><span class="function">//<span class="title">result</span>结构约定如下：</span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    <span class="string">'key'</span>:<span class="string">'value'</span></span><br><span class="line">&#125;</span><br><span class="line"><span class="comment">//result是字典结构，便于以后扩展添加验证之类的参数</span></span><br></pre></td></tr></table></figure>
+
+<p><strong>jsResponseCallback</strong>方法用于原生端调用js端方法后，js端把结果回调给原生端。<br><strong>jsResponseCallback</strong>参数是在iOS端是一个JSVaule对象，在Android端是一个json字符串，这是一个字典结构，约定如下:</p>
+<figure class="highlight"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">&#123;</span><br><span class="line">	'Method':method,//用于原生端确定是哪个API的回调结果</span><br><span class="line">	'err':err,</span><br><span class="line">	'result':&#123;</span><br><span class="line">				'key':value</span><br><span class="line">				&#125;		</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h3 id="原生端调用js端方法"><a href="#原生端调用js端方法" class="headerlink" title="原生端调用js端方法"></a>原生端调用js端方法</h3><p>上面说的都是原生端提供功能给js端调用，还有一种场景就是js端提供功能API给原生端调用。<br>js端会实现一个bridge对象，birdge对象里面有一个方法<strong>handlerNativeMessage</strong>来handler原生端的调用，<strong>handlerNativeMessage</strong>参数结构约定如下:</p>
+<figure class="highlight"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">&#123;</span><br><span class="line">    'Method':'Login',//Method是js对APP提供的API</span><br><span class="line">    'Data':&#123;&#125;//Data是该API需要的入参</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>原生端调用js端<strong>handlerNativeMessage</strong>方法方式如下:</p>
+<figure class="highlight objc"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//iOS版本</span></span><br><span class="line">   <span class="built_in">NSDictionary</span> *req = @&#123;<span class="string">@"Method"</span>:handlerName?:<span class="string">@""</span>,<span class="string">@"Data"</span>:data?:@&#123;&#125;&#125;;</span><br><span class="line">   JSValue *jsFunc = _jsContext[<span class="string">@"webBridge"</span>][<span class="string">@"handlerNativeMessage"</span>];</span><br><span class="line">   [jsFunc callWithArguments:@[req]];</span><br></pre></td></tr></table></figure>
+
+<h2 id="封装"><a href="#封装" class="headerlink" title="封装"></a>封装</h2><p>上面说的都是原生端和js端交互的基础原理，为了方便使用，各端都会对这些基础功能实现封装。</p>
+<h3 id="js端"><a href="#js端" class="headerlink" title="js端"></a>js端</h3><p>为了实现原生端和js端相互调用，相互回调，js端会实现一个bridge对象。bridge对象源码如下:</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br><span class="line">94</span><br><span class="line">95</span><br><span class="line">96</span><br><span class="line">97</span><br><span class="line">98</span><br><span class="line">99</span><br><span class="line">100</span><br><span class="line">101</span><br><span class="line">102</span><br><span class="line">103</span><br><span class="line">104</span><br><span class="line">105</span><br><span class="line">106</span><br><span class="line">107</span><br><span class="line">108</span><br><span class="line">109</span><br><span class="line">110</span><br><span class="line">111</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line">(<span class="function"><span class="keyword">function</span>(<span class="params">win</span>) </span>&#123;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">    <span class="keyword">var</span> ua = navigator.userAgent;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">function</span> <span class="title">getQueryString</span>(<span class="params">name</span>) </span>&#123;</span><br><span class="line">        <span class="keyword">var</span> reg = <span class="keyword">new</span> <span class="built_in">RegExp</span>(<span class="string">'(^|&amp;)'</span> + name + <span class="string">'=([^&amp;]*)(&amp;|$)'</span>, <span class="string">'i'</span>);</span><br><span class="line">        <span class="keyword">var</span> r = <span class="built_in">window</span>.location.search.substr(<span class="number">1</span>).match(reg);</span><br><span class="line">        <span class="keyword">if</span> (r !== <span class="literal">null</span>) <span class="keyword">return</span> <span class="built_in">unescape</span>(r[<span class="number">2</span>]);</span><br><span class="line">        <span class="keyword">return</span> <span class="literal">null</span>;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">function</span> <span class="title">isAndroid</span>(<span class="params"></span>) </span>&#123;</span><br><span class="line">        <span class="keyword">return</span> ua.indexOf(<span class="string">'Android'</span>) &gt; <span class="number">0</span>;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">function</span> <span class="title">isIOS</span>(<span class="params"></span>) </span>&#123;</span><br><span class="line">        <span class="keyword">return</span> <span class="regexp">/(iPhone|iPad|iPod)/i</span>.test(ua);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">function</span> <span class="title">checkAppRouterValidity</span>(<span class="params">argument</span>) </span>&#123;</span><br><span class="line">        <span class="comment">// body... </span></span><br><span class="line">        <span class="keyword">if</span> ((isAndroid() || isIOS()) &amp;&amp; (<span class="keyword">typeof</span>(win[<span class="string">'hxWebBridge'</span>]) !== <span class="string">'undefined'</span>) === <span class="literal">true</span>) &#123;</span><br><span class="line">            <span class="keyword">return</span> <span class="literal">true</span>;</span><br><span class="line">        &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">            <span class="keyword">return</span> <span class="literal">false</span>;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">var</span> messageHandlers = &#123;&#125;;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">var</span> mobile = &#123;</span><br><span class="line"></span><br><span class="line">        <span class="comment">/**</span></span><br><span class="line"><span class="comment">         *通过bridge调用app端的方法</span></span><br><span class="line"><span class="comment">         * @param method</span></span><br><span class="line"><span class="comment">         * @param params</span></span><br><span class="line"><span class="comment">         * @param callback function(err, result)函数</span></span><br><span class="line"><span class="comment">         */</span></span><br><span class="line">        callHandler: <span class="function"><span class="keyword">function</span>(<span class="params">method, params, callback</span>) </span>&#123;</span><br><span class="line">            <span class="keyword">var</span> req = &#123;</span><br><span class="line">                <span class="string">'Method'</span>: method,</span><br><span class="line">                <span class="string">'Data'</span>: params</span><br><span class="line">            &#125;;</span><br><span class="line">            <span class="keyword">if</span> (isIOS()) &#123;</span><br><span class="line">                win.hxWebBridge.handlerJSMessage(req, <span class="function"><span class="keyword">function</span>(<span class="params">err, result</span>) </span>&#123;</span><br><span class="line">                    <span class="keyword">var</span> resultObj = <span class="literal">null</span>;</span><br><span class="line">                    <span class="keyword">var</span> errorMsg = <span class="literal">null</span>;</span><br><span class="line">                    <span class="keyword">if</span> (<span class="keyword">typeof</span>(result) !== <span class="string">'undefined'</span> &amp;&amp; result !== <span class="string">'null'</span> &amp;&amp; result !== <span class="literal">null</span>) &#123;</span><br><span class="line">                        resultObj = <span class="built_in">JSON</span>.parse(result);</span><br><span class="line">                        <span class="keyword">if</span> (resultObj) &#123;</span><br><span class="line">                            resultObj = resultObj[<span class="string">'result'</span>];</span><br><span class="line">                        &#125;</span><br><span class="line">                    &#125;</span><br><span class="line">                    <span class="keyword">if</span> (err !== <span class="string">'null'</span> &amp;&amp; <span class="keyword">typeof</span>(err) !== <span class="string">'undefined'</span> &amp;&amp; err !== <span class="literal">null</span>) &#123;</span><br><span class="line">                        errorMsg = err;</span><br><span class="line">                    &#125;</span><br><span class="line">                    callback(err, resultObj);</span><br><span class="line">                &#125;);</span><br><span class="line">            &#125; <span class="keyword">else</span> <span class="keyword">if</span> (isAndroid()) &#123;</span><br><span class="line">                <span class="comment">//生成回调函数方法名称</span></span><br><span class="line">                <span class="keyword">var</span> cbName = <span class="string">'CB_'</span> + <span class="built_in">Date</span>.now() + <span class="string">'_'</span> + <span class="built_in">Math</span>.ceil(<span class="built_in">Math</span>.random() * <span class="number">10</span>);</span><br><span class="line">                <span class="comment">//挂载一个临时函数到window变量上，方便app回调</span></span><br><span class="line">                win[cbName] = <span class="function"><span class="keyword">function</span>(<span class="params">err, result</span>) </span>&#123;</span><br><span class="line">                    <span class="keyword">var</span> resultObj;</span><br><span class="line">                    <span class="keyword">if</span> (<span class="keyword">typeof</span>(result) !== <span class="string">'undefined'</span> &amp;&amp; result !== <span class="literal">null</span>) &#123;</span><br><span class="line">                        resultObj = <span class="built_in">JSON</span>.parse(result)[<span class="string">'result'</span>];</span><br><span class="line">                    &#125;</span><br><span class="line">                    callback(err, resultObj);</span><br><span class="line">                    <span class="comment">//回调成功之后删除挂载到window上的临时函数</span></span><br><span class="line">                    <span class="keyword">delete</span> win[cbName];</span><br><span class="line">                &#125;;</span><br><span class="line">                win.hxWebBridge.handlerJSMessage(<span class="built_in">JSON</span>.stringify(req), cbName);</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;,</span><br><span class="line"></span><br><span class="line">        <span class="comment">/**</span></span><br><span class="line"><span class="comment">  		 *通过bridge来handler app端调用的方法</span></span><br><span class="line"><span class="comment">         * @param method</span></span><br><span class="line"><span class="comment">         * @param handler function(params, function(err, result))函数</span></span><br><span class="line"><span class="comment">        */</span></span><br><span class="line">        registerHandler: <span class="function"><span class="keyword">function</span>(<span class="params">method, handler</span>) </span>&#123;</span><br><span class="line">  			messageHandlers.method = handler;</span><br><span class="line">        &#125;,</span><br><span class="line"></span><br><span class="line">        <span class="comment">/**</span></span><br><span class="line"><span class="comment">		 *私有方法，只会在native端调用</span></span><br><span class="line"><span class="comment">        */</span></span><br><span class="line">        handlerNativeMessage: <span class="function"><span class="keyword">function</span>(<span class="params">params</span>) </span>&#123;</span><br><span class="line">		   <span class="keyword">var</span> method = params[<span class="string">'Method'</span>];</span><br><span class="line">		    <span class="keyword">var</span> data = params[<span class="string">'Data'</span>];</span><br><span class="line">		    <span class="keyword">var</span> handler = messageHandlers.method;</span><br><span class="line">		    <span class="keyword">var</span> responseCallback = <span class="function"><span class="keyword">function</span>(<span class="params">err, result</span>) </span>&#123;</span><br><span class="line">		            <span class="keyword">var</span> response = &#123;&#125;;</span><br><span class="line">		           response[<span class="string">'Method'</span>] = method;</span><br><span class="line">		           response[<span class="string">'err'</span>] = err;</span><br><span class="line">		           response[<span class="string">'result'</span>] = result;</span><br><span class="line">		            <span class="built_in">window</span>.hxWebBridge.jsResponseCallback(<span class="built_in">JSON</span>.stringify(response));</span><br><span class="line">		    &#125;;</span><br><span class="line">		    <span class="keyword">if</span> (handler != <span class="literal">null</span>) &#123;</span><br><span class="line">		        handler(data, responseCallback);</span><br><span class="line">		    &#125;<span class="keyword">else</span> &#123;</span><br><span class="line">		    	responseCallback(<span class="string">'JS Method not found'</span>, <span class="literal">null</span>);</span><br><span class="line">		    &#125;</span><br><span class="line">        &#125;,</span><br><span class="line">            </span><br><span class="line">    &#125;;</span><br><span class="line">    <span class="comment">//将mobile对象挂载到window全局</span></span><br><span class="line">    win.webBridge = mobile;</span><br><span class="line">&#125;)(<span class="built_in">window</span>);</span><br></pre></td></tr></table></figure>
+
+<p>源码放在<strong>bridge.js</strong>文件里，这个文件可以提供的js端通过如下方式引用:</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">&lt;script src=<span class="string">'bridge.js'</span>&gt;&lt;/script&gt;</span><br></pre></td></tr></table></figure>
+
+<p>也直接直接放在APP端，通过APP执行代码把<strong>bridge.js</strong>加入h5中。</p>
+<p>借助<strong>bridge.js</strong>，js端使用的方法就可以简化为如下:</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br></pre></td><td class="code"><pre><span class="line">&lt;script&gt;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">function</span> <span class="title">loginTest</span>(<span class="params"></span>) </span>&#123;</span><br><span class="line">   	  <span class="comment">//js端调用原生端的'Login'功能</span></span><br><span class="line">        webBridge.callHandler(<span class="string">'Login'</span>, <span class="literal">null</span>, <span class="function"><span class="keyword">function</span>(<span class="params">errMsg, res</span>) </span>&#123;</span><br><span class="line">        	  <span class="comment">//原生端的回调</span></span><br><span class="line">           <span class="keyword">if</span> (errMsg !== <span class="literal">null</span> &amp;&amp; errMsg !== <span class="string">'undefined'</span> &amp;&amp; errMsg !== <span class="string">'null'</span>) &#123;</span><br><span class="line">           </span><br><span class="line">           &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">               <span class="keyword">var</span> name = res[<span class="string">'phone'</span>];</span><br><span class="line">               <span class="keyword">if</span> (name !== <span class="string">'undefined'</span> &amp;&amp; name !== <span class="string">'null'</span>) &#123;</span><br><span class="line">               <span class="keyword">var</span> button = <span class="built_in">document</span>.getElementById(<span class="string">'loginButton'</span>);</span><br><span class="line">               button.innerHTML = name;</span><br><span class="line">               &#125;</span><br><span class="line">           &#125;</span><br><span class="line">        &#125;);</span><br><span class="line">    &#125;;</span><br><span class="line">	</span><br><span class="line">	</span><br><span class="line">	<span class="comment">//js提供给原生端的功能，此功能API名为'nativeTojs'</span></span><br><span class="line">    webBridge.registerHandler(<span class="string">'nativeTojs'</span>,<span class="function"><span class="keyword">function</span>(<span class="params">params, responseCallback</span>)</span>&#123;</span><br><span class="line">    		</span><br><span class="line">    	  <span class="comment">//js端'nativeTojs'功能的实现</span></span><br><span class="line">        <span class="keyword">var</span> button = <span class="built_in">document</span>.getElementById(<span class="string">'testButton'</span>);</span><br><span class="line">        button.innerHTML = <span class="built_in">JSON</span>.stringify(params);</span><br><span class="line">        </span><br><span class="line">        <span class="comment">//结果回调给原生端</span></span><br><span class="line">        responseCallback(<span class="literal">null</span>, <span class="string">'这是native调用js后，js返回给native的值'</span>);</span><br><span class="line">                       </span><br><span class="line">    &#125;);</span><br><span class="line"></span><br><span class="line">&lt;<span class="regexp">/script&gt;</span></span><br></pre></td></tr></table></figure>
+
+<h3 id="iOS端"><a href="#iOS端" class="headerlink" title="iOS端"></a>iOS端</h3><p>iOS端也实现了一个bridge,便于开发人员使用，接口如下:</p>
+<figure class="highlight objc"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">@interface</span> <span class="title">HXWebViewJavaScriptBridge</span> : <span class="title">NSObject</span>&lt;<span class="title">HXBridgeExport</span>&gt;</span></span><br><span class="line"></span><br><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment"> 初始化bridge</span></span><br><span class="line"><span class="comment"></span></span><br><span class="line"><span class="comment"> @param webView webView</span></span><br><span class="line"><span class="comment"> @return bridge</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line">+ (<span class="keyword">id</span>)bridgeForWebView:(<span class="built_in">UIWebView</span> *)webView;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment"> register一个功能，供js端调用</span></span><br><span class="line"><span class="comment"></span></span><br><span class="line"><span class="comment"> @param handlerName 功能API名称</span></span><br><span class="line"><span class="comment"> @param hander hander</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line">- (<span class="keyword">void</span>)registerHandler:(<span class="built_in">NSString</span> *)handlerName handler:(HXJBHandler)hander;</span><br><span class="line"></span><br><span class="line">    </span><br><span class="line">    </span><br><span class="line">- (<span class="keyword">void</span>)callHandler:(<span class="built_in">NSString</span> *)handlerName;</span><br><span class="line">- (<span class="keyword">void</span>)callHandler:(<span class="built_in">NSString</span> *)handlerName data:(<span class="keyword">id</span>)data;</span><br><span class="line">    </span><br><span class="line"></span><br><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment"> 执行js端上某个功能API</span></span><br><span class="line"><span class="comment"></span></span><br><span class="line"><span class="comment"> @param handlerName 功能API名称</span></span><br><span class="line"><span class="comment"> @param data API需要的入参</span></span><br><span class="line"><span class="comment"> @param responseCallback js端执行后的回调</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line">- (<span class="keyword">void</span>)callHandler:(<span class="built_in">NSString</span> *)handlerName data:(<span class="keyword">id</span>)data responseCallBack:(HXJBResponseCallBack)responseCallback;</span><br><span class="line"></span><br><span class="line"><span class="keyword">@end</span></span><br></pre></td></tr></table></figure>
+
+<p>使用方式如下:</p>
+<figure class="highlight objc"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//初始化</span></span><br><span class="line"> <span class="keyword">self</span>.bridge = [HXWebViewJavaScriptBridge bridgeForWebView:<span class="keyword">self</span>.webView];</span><br><span class="line"> </span><br><span class="line"> <span class="comment">//注册一个Method叫‘Login’的API给js端使用</span></span><br><span class="line"> [<span class="keyword">self</span>.bridge registerHandler:<span class="string">@"Login"</span> handler:^(<span class="built_in">NSDictionary</span> *params, HXJBResponseCallBack responseCallback) &#123;</span><br><span class="line">        <span class="built_in">NSLog</span>(<span class="string">@"Login--&gt;收到js传来的参数:%@"</span>,params);</span><br><span class="line">        <span class="built_in">NSLog</span>(<span class="string">@"登录中...."</span>);</span><br><span class="line">        dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(<span class="number">2</span> * <span class="built_in">NSEC_PER_SEC</span>)), dispatch_get_main_queue(), ^&#123;</span><br><span class="line">            <span class="built_in">NSDictionary</span> *result = @&#123;<span class="string">@"phone"</span>:<span class="string">@"1111111111"</span>&#125;;</span><br><span class="line">            <span class="built_in">NSLog</span>(<span class="string">@"登录成功,把结果回调给js端:%@"</span>,result);</span><br><span class="line">            responseCallback(<span class="literal">nil</span>,result);</span><br><span class="line">        &#125;);</span><br><span class="line">  &#125;];</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="comment">//请求js端Method叫‘nativeTojs’的功能</span></span><br><span class="line"> [<span class="keyword">self</span>.bridge callHandler:<span class="string">@"nativeTojs"</span> data:<span class="string">@"来自native的值"</span> responseCallBack:^(<span class="built_in">NSError</span> *err, <span class="keyword">id</span> responseObject) &#123;</span><br><span class="line">        <span class="built_in">NSLog</span>(<span class="string">@"收到js的返回err:%@"</span>,err);</span><br><span class="line">        <span class="built_in">NSLog</span>(<span class="string">@"收到js的返回数据:%@"</span>,responseObject);</span><br><span class="line">  &#125;];</span><br></pre></td></tr></table></figure>
+
+<h3 id="Android端"><a href="#Android端" class="headerlink" title="Android端"></a>Android端</h3><p>Android端也请按照上面的方式封装一下给开发人员使用</p>
+<h4 id="附"><a href="#附" class="headerlink" title="附"></a>附</h4><p>该方案实现参考文章如下:</p>
+<p>此文章介绍iOS端JavaScriptCore<a href="http://blog.iderzheng.com/ios7-objects-management-in-javascriptcore-framework/" target="_blank" rel="noopener">JavaScriptCore框架在iOS7中的对象交互和管理</a></p>
+<p>此文章提供给js调用原生端的回调处理提供了思路<a href="http://www.jianshu.com/p/9b52aaff4f5a" target="_blank" rel="noopener">JavaScript调用App原生代码(iOS、Android)通用解决方案
+</a></p>
+
+            <!--[if lt IE 9]><script>document.createElement('audio');</script><![endif]-->
+            <audio id="audio" loop="1" preload="auto" controls="controls" data-autoplay="false">
+                <source type="audio/mpeg" src="">
+            </audio>
+            
+                <ul id="audio-list" style="display:none">
+                    
+                        <li title='0' data-url='http://link.hhtjim.com/163/5146554.mp3'></li>
+                    
+                        <li title='1' data-url='http://link.hhtjim.com/qq/001faIUs4M2zna.mp3'></li>
+                    
+                </ul>
+            
+        </div>
+        
+    <div id='gitalk-container' class="comment link"
+        data-ae='false'
+        data-ci=''
+        data-cs=''
+        data-r=''
+        data-o=''
+        data-a=''
+        data-d='false'
+    >查看评论</div>
+
+
+    </div>
+    
+</div>
+
+
+    </div>
+</div>
+</body>
+<script src="//cdn.jsdelivr.net/npm/gitalk@1/dist/gitalk.min.js"></script>
+<script src="//lib.baomitu.com/jquery/1.8.3/jquery.min.js"></script>
+<script src="/js/plugin.js"></script>
+<script src="/js/diaspora.js"></script>
+<link rel="stylesheet" href="/photoswipe/photoswipe.css">
+<link rel="stylesheet" href="/photoswipe/default-skin/default-skin.css">
+<script src="/photoswipe/photoswipe.min.js"></script>
+<script src="/photoswipe/photoswipe-ui-default.min.js"></script>
+
+<!-- Root element of PhotoSwipe. Must have class pswp. -->
+<div class="pswp" tabindex="-1" role="dialog" aria-hidden="true">
+    <!-- Background of PhotoSwipe. 
+         It's a separate element as animating opacity is faster than rgba(). -->
+    <div class="pswp__bg"></div>
+    <!-- Slides wrapper with overflow:hidden. -->
+    <div class="pswp__scroll-wrap">
+        <!-- Container that holds slides. 
+            PhotoSwipe keeps only 3 of them in the DOM to save memory.
+            Don't modify these 3 pswp__item elements, data is added later on. -->
+        <div class="pswp__container">
+            <div class="pswp__item"></div>
+            <div class="pswp__item"></div>
+            <div class="pswp__item"></div>
+        </div>
+        <!-- Default (PhotoSwipeUI_Default) interface on top of sliding area. Can be changed. -->
+        <div class="pswp__ui pswp__ui--hidden">
+            <div class="pswp__top-bar">
+                <!--  Controls are self-explanatory. Order can be changed. -->
+                <div class="pswp__counter"></div>
+                <button class="pswp__button pswp__button--close" title="Close (Esc)"></button>
+                <button class="pswp__button pswp__button--share" title="Share"></button>
+                <button class="pswp__button pswp__button--fs" title="Toggle fullscreen"></button>
+                <button class="pswp__button pswp__button--zoom" title="Zoom in/out"></button>
+                <!-- Preloader demo http://codepen.io/dimsemenov/pen/yyBWoR -->
+                <!-- element will get class pswp__preloader--active when preloader is running -->
+                <div class="pswp__preloader">
+                    <div class="pswp__preloader__icn">
+                      <div class="pswp__preloader__cut">
+                        <div class="pswp__preloader__donut"></div>
+                      </div>
+                    </div>
+                </div>
+            </div>
+            <div class="pswp__share-modal pswp__share-modal--hidden pswp__single-tap">
+                <div class="pswp__share-tooltip"></div> 
+            </div>
+            <button class="pswp__button pswp__button--arrow--left" title="Previous (arrow left)">
+            </button>
+            <button class="pswp__button pswp__button--arrow--right" title="Next (arrow right)">
+            </button>
+            <div class="pswp__caption">
+                <div class="pswp__caption__center"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+
+
+</html>
